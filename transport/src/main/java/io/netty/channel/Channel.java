@@ -353,6 +353,25 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
         return pipeline().newFailedFuture(cause);
     }
 
+    // These are just added for now and will be removed in the followup PR.
+    default ChannelFuture register(EventLoop loop) {
+        DefaultChannelPromise promise = new DefaultChannelPromise(this, loop);
+        register(loop, promise);
+        return promise;
+    }
+
+    // These are just added for now and will be removed in the followup PR.
+    default ChannelFuture register(EventLoop loop, ChannelPromise promise) {
+        if (loop.inEventLoop()) {
+            unsafe().register(loop, promise);
+        } else {
+            loop.execute(() -> {
+                unsafe().register(loop, promise);
+            });
+        }
+        return promise;
+    }
+
     /**
      * <em>Unsafe</em> operations that should <em>never</em> be called from user-code. These methods
      * are only provided to implement the actual transport, and must be invoked from an I/O thread except for the
